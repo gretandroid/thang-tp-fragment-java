@@ -1,13 +1,16 @@
 package com.example.tpfragmentjava;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.tpfragmentjava.model.Model.Category;
@@ -17,16 +20,13 @@ import java.util.List;
 
 public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRecyclerViewAdapter.ViewHolder> {
 
-    private int selected_index;
-    private final List<Category> mValues;
-    private ActivityResultLauncher<Intent> intentLauncher;
-    private Activity activity;
+    private int selected_index = -1;
+    private final List<Category> categories;
+    private final Fragment fragment;
 
-    public CategoryRecyclerViewAdapter(List<Category> items, Activity activity,
-                                       ActivityResultLauncher<Intent> intentLauncher) {
-        mValues = items;
-        this.activity = activity;
-        this.intentLauncher = intentLauncher;
+    public CategoryRecyclerViewAdapter(List<Category> items, Fragment fragment) {
+        categories = items;
+        this.fragment = fragment;
     }
 
     @Override
@@ -36,36 +36,47 @@ public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRe
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.mItem = mValues.get(position);
-        holder.mIdView.setText(mValues.get(position).id);
-        holder.mNameView.setText(mValues.get(position).name);
+        holder.mItem = categories.get(position);
+        holder.mIdView.setText(categories.get(position).id);
+        holder.mNameView.setText(categories.get(position).name);
+        holder.layout.setOnClickListener((view) -> {
+                selected_index = position;
+                notifyDataSetChanged();
+                onClick(view, position);
+            }
+        );
         // set back ground color of selected item here
-
-        holder.mNameView.setOnClickListener((view) -> onClick(view, position));
-        holder.mIdView.setOnClickListener((view) -> onClick(view, position));
+        if (position == selected_index) {
+            holder.layout.setBackgroundColor(Color.parseColor("#567845"));
+        }
+        else {
+            holder.layout.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        }
+//        holder.mNameView.setOnClickListener((view) -> onClick(view, position));
+//        holder.mIdView.setOnClickListener((view) -> onClick(view, position));
     }
 
     private void onClick(View view, int position) {
         selected_index = position;
-        // create an intent to sent message to main activity
-        Intent intent = new Intent(activity, SecondActivity.class);
-        intent.putExtra(MainActivity.KEY_CATEGORY_ID, mValues.get(position).id);
-
-        intentLauncher.launch(intent);
+        if (fragment instanceof Communication) {
+            ((Communication) fragment).send(view, position);
+        }
     }
 
     @Override
     public int getItemCount() {
-        return mValues.size();
+        return categories.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final TextView mIdView;
         public final TextView mNameView;
+        public final ViewGroup layout;
         public Category mItem;
 
         public ViewHolder(FragmentCategoryBinding binding) {
             super(binding.getRoot());
+            layout = binding.getRoot();
             mIdView = binding.categoryNumber;
             mNameView = binding.categoryName;
         }

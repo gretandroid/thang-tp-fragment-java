@@ -24,10 +24,11 @@ import com.example.tpfragmentjava.model.Model;
 /**
  * A fragment representing a list of Items.
  */
-public class CategoryFragment extends Fragment {
+public class CategoryFragment extends Fragment implements Communication {
 
     private Activity activity;
     RecyclerView recyclerView;
+    CategoryRecyclerViewAdapter adapter;
 
     // declare a launcher to call an intent to start
     // an execution process ActivityResultContracts
@@ -44,25 +45,7 @@ public class CategoryFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_category_list, container, false);
 
-        // launcher register
-        intentLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        // Check whether result is OK
-                        if (result.getResultCode() == Activity.RESULT_OK) {
-                            // retrieve the intent return by second Activity
-                            Intent data = result.getData();
 
-                            // get category id in intent
-                            String category_id = data.getStringExtra(MainActivity.KEY_CATEGORY_ID);
-                            Model.Category category = Model.ITEM_MAP.get(category_id);
-                            int index = Model.ITEMS.indexOf(category);
-
-                        }
-                    }
-                });
         // Set the adapter
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
@@ -70,7 +53,8 @@ public class CategoryFragment extends Fragment {
 
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
 
-            recyclerView.setAdapter(new CategoryRecyclerViewAdapter(Model.ITEMS, activity, intentLauncher));
+            adapter = new CategoryRecyclerViewAdapter(Model.ITEMS, this);
+            recyclerView.setAdapter(adapter);
 
         }
         return view;
@@ -80,5 +64,16 @@ public class CategoryFragment extends Fragment {
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         activity = (Activity) context;
+    }
+
+    @Override
+    public void send(View source, int selected_index) {
+        if (activity instanceof Communication) {
+            ((Communication) activity).send(source, selected_index);
+        }
+    }
+
+    public RecyclerView.Adapter getAdapter() {
+        return adapter;
     }
 }
